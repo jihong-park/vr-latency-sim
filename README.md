@@ -26,6 +26,18 @@ This repo includes a GitHub Actions workflow at `.github/workflows/deploy-pages.
 
    `https://jihong-park.github.io/vr-latency-sim/`
 
+If Actions is unavailable, publish with `gh-pages` instead:
+
+```bash
+cd /Users/jihongpark/Desktop/vr-latency-sim
+npm install
+npm run deploy
+```
+
+Then set Pages source to:
+- Branch: `gh-pages`
+- Folder: `/`
+
 ## Files implemented
 
 - `src/model/*`: radio/backhaul/compute/placement helper functions
