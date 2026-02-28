@@ -14,6 +14,18 @@ npm run dev
 
 Then open the Vite URL and use the controls to run Monte Carlo updates.
 
+## Publish publicly with GitHub Pages
+
+This repo includes a GitHub Actions workflow at `.github/workflows/deploy-pages.yml` that deploys `npm run build` to GitHub Pages on every push to `main`.
+
+1. Ensure the repository is `public` (or configured for Pages in your GitHub plan).
+2. In GitHub → Settings → Pages, set:
+   - Source: `GitHub Actions`
+3. Push to `main`.
+4. Wait for the workflow and open:
+
+   `https://jihong-park.github.io/vr-latency-sim/`
+
 ## Files implemented
 
 - `src/model/*`: radio/backhaul/compute/placement helper functions
