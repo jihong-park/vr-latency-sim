@@ -27,12 +27,12 @@ export function renderMetrics(
     .join('');
 
   const lines: string[] = [];
-  lines.push(`<h3 style=\"margin:0 0 6px 0\">E2E latency</h3>`);
-  lines.push(`<div class=\"metric-line\"><span>Mean</span><strong>${result.meanE2E.toFixed(4)} s</strong></div>`);
-  lines.push(`<div class=\"metric-line\"><span>Worst</span><strong>${result.worstE2E.toFixed(4)} s</strong></div>`);
+  lines.push(`<h3 style=\"margin:0 0 6px 0\">Latency Analysis</h3>`);
+  lines.push(`<div class=\"metric-title-row\"><span>Mean E2E</span><div class=\"metric-bar\"></div><strong class=\"metric-value\">${result.meanE2E.toFixed(4)} s</strong></div>`);
+  lines.push(`<div class=\"metric-title-row\"><span>Worst E2E</span><div class=\"metric-bar\"></div><strong class=\"metric-value\">${result.worstE2E.toFixed(4)} s</strong></div>`);
   lines.push(`<h4 style=\"margin:8px 0 4px 0\">Average components</h4>`);
   lines.push(`<div class=\"metric-chart\">${bars}</div>`);
-  lines.push(`<div class=\"metric-line\">Cross-type ratio: ${(result.crossTypeRatio * 100).toFixed(1)}%</div>`);
+  lines.push(`<div class=\"metric-line\"><span>Cross-type ratio</span><strong>${(result.crossTypeRatio * 100).toFixed(1)}%</strong></div>`);
 
   container.innerHTML = lines.join('');
 }

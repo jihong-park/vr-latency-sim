@@ -211,52 +211,181 @@ function averageOverWindow(rawResult: SimulationResult): SimulationResult {
 const canvas = document.createElement('canvas');
 canvas.width = state.width;
 canvas.height = state.height;
+canvas.style.touchAction = 'none';
 
 const side = document.createElement('aside');
 side.className = 'sidebar';
 side.innerHTML = `
-  <div>
-    <label>Optimization objective</label>
-    <select id="optimizeObjective">
-      <option value="meanE2E">Minimize mean E2E</option>
-      <option value="worstE2E">Minimize worst-case E2E</option>
-    </select>
+  <div class="panel panel--brand">
+    <div class="panel-eyebrow">VR-Latency Studio</div>
+    <h1>Physical + Virtual Network Simulator</h1>
+    <p>Interactive controls for topology, mobility, latency, and server placement.</p>
   </div>
-  <button id="optimizeBtn">Optimize</button>
-  <label>UE count <span id="userCountValue">${state.users.length}</span></label>
-  <input id="userCount" type="range" value="${state.users.length}" min="10" max="250" step="1" />
-  <div id="ueCounter">UEs: ${state.users.length} (Space 1: 40, Space 2: 40)</div>
-  <label>BS count <input id="bsCount" type="number" value="4" min="1" max="12" /></label>
-  <label>Virtual space count <span id="virtualSpaceCountValue">${state.communities.length}</span></label>
-  <input id="virtualSpaceCount" type="range" value="${state.communities.length}" min="1" max="8" step="1" />
-  <label>Physical UE speed (m/s) <span id="mobilitySpeedPhysicalValue">${Math.round(state.mobility.physicalSpeed)}</span></label>
-  <input id="mobilitySpeedPhysical" type="range" value="${Math.round(state.mobility.physicalSpeed)}" min="${mobilitySpeedMin}" max="${mobilitySpeedMax}" step="1" />
-  <label>Virtual UE speed (m/s) <span id="mobilitySpeedVirtualValue">${Math.round(state.mobility.virtualSpeed)}</span></label>
-  <input id="mobilitySpeedVirtual" type="range" value="${Math.round(state.mobility.virtualSpeed)}" min="${mobilitySpeedMin}" max="${mobilitySpeedMax}" step="1" />
- <label>Virtual interaction
-    <select id="virtualInteractionMode">
-      <option value="nearestK" ${state.mobility.virtualInteractionMode === 'nearestK' ? 'selected' : ''}>Nearest K</option>
-      <option value="radius" ${state.mobility.virtualInteractionMode === 'radius' ? 'selected' : ''}>Radius</option>
-      <option value="randomM" ${state.mobility.virtualInteractionMode === 'randomM' ? 'selected' : ''}>Random M</option>
-      <option value="all" ${state.mobility.virtualInteractionMode === 'all' ? 'selected' : ''}>All-to-All</option>
-    </select>
-  </label>
-  <label>Virtual K <input id="virtualK" type="number" value="${state.mobility.virtualK}" min="1" max="20" /></label>
-  <label>Virtual radius <input id="virtualRadius" type="number" value="${state.mobility.virtualRadius}" min="0.01" max="1" step="0.01" /></label>
-  <label>Backhaul latency (s) <span id="backhaulLatencySecValue">${state.params.backhaulLatencySec.toFixed(4)}</span></label>
-  <input id="backhaulLatencySec" type="range" value="${state.params.backhaulLatencySec}" min="0" max="1" step="0.001" />
-  <label>Server compute latency (s) <span id="computeLatencySecValue">${state.params.computeLatencySec.toFixed(4)}</span></label>
-  <input id="computeLatencySec" type="range" value="${state.params.computeLatencySec}" min="0" max="2" step="0.001" />
+  <section class="panel">
+    <h2>Latency Analysis</h2>
+    <div id="metrics" class="metric-shell"></div>
+  </section>
+  <section class="panel">
+    <h2>Scenario Setup</h2>
+    <div class="metric-summary metric-summary-muted" id="ueCounter">UEs: ${state.users.length} (Space 1: 40, Space 2: 40)</div>
+    <div class="control-field">
+      <label for="userCount">UE count</label>
+      <div class="range-row">
+        <input id="userCount" type="range" value="${state.users.length}" min="10" max="250" step="1" />
+        <span id="userCountValue" class="value-chip">${state.users.length}</span>
+      </div>
+    </div>
+    <div class="control-field">
+      <label for="bsCount">BS count</label>
+      <div class="range-row">
+        <input id="bsCount" type="number" value="${Math.max(1, state.bs.length)}" min="1" max="12" />
+        <span class="value-chip">range 1 - 12</span>
+      </div>
+    </div>
+    <div class="control-field">
+      <label for="virtualSpaceCount">Virtual space count</label>
+      <div class="range-row">
+        <input id="virtualSpaceCount" type="range" value="${state.communities.length}" min="1" max="8" step="1" />
+        <span id="virtualSpaceCountValue" class="value-chip">${state.communities.length}</span>
+      </div>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Mobility</h2>
+    <div class="control-field">
+      <label for="mobilitySpeedPhysical">Physical UE speed (m/s)</label>
+      <div class="range-row">
+        <input id="mobilitySpeedPhysical" type="range" value="${Math.round(state.mobility.physicalSpeed)}" min="${mobilitySpeedMin}" max="${mobilitySpeedMax}" step="1" />
+        <span id="mobilitySpeedPhysicalValue" class="value-chip">${Math.round(state.mobility.physicalSpeed)}</span>
+      </div>
+    </div>
+    <div class="control-field">
+      <label for="mobilitySpeedVirtual">Virtual UE speed (m/s)</label>
+      <div class="range-row">
+        <input id="mobilitySpeedVirtual" type="range" value="${Math.round(state.mobility.virtualSpeed)}" min="${mobilitySpeedMin}" max="${mobilitySpeedMax}" step="1" />
+        <span id="mobilitySpeedVirtualValue" class="value-chip">${Math.round(state.mobility.virtualSpeed)}</span>
+      </div>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Virtual Interaction</h2>
+    <div class="control-field">
+      <label for="virtualInteractionMode">Pattern</label>
+      <select id="virtualInteractionMode">
+        <option value="nearestK" ${state.mobility.virtualInteractionMode === 'nearestK' ? 'selected' : ''}>Nearest K</option>
+        <option value="radius" ${state.mobility.virtualInteractionMode === 'radius' ? 'selected' : ''}>Radius</option>
+        <option value="randomM" ${state.mobility.virtualInteractionMode === 'randomM' ? 'selected' : ''}>Random M</option>
+        <option value="all" ${state.mobility.virtualInteractionMode === 'all' ? 'selected' : ''}>All-to-All</option>
+      </select>
+    </div>
+    <div class="control-grid-2">
+      <div class="control-field">
+        <label for="virtualK">Virtual K</label>
+        <input id="virtualK" type="number" value="${state.mobility.virtualK}" min="1" max="20" />
+      </div>
+      <div class="control-field">
+        <label for="virtualRadius">Virtual radius</label>
+        <input id="virtualRadius" type="number" value="${state.mobility.virtualRadius}" min="0.01" max="1" step="0.01" />
+      </div>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Radio Link Parameters</h2>
+    <div class="control-field">
+      <label for="backhaulLatencySec">Backhaul latency (s)</label>
+      <div class="range-row">
+        <input id="backhaulLatencySec" type="range" value="${state.params.backhaulLatencySec}" min="0" max="1" step="0.001" />
+        <span id="backhaulLatencySecValue" class="value-chip">${state.params.backhaulLatencySec.toFixed(4)}</span>
+      </div>
+    </div>
+    <div class="control-field">
+      <label for="computeLatencySec">Server compute latency (s)</label>
+      <div class="range-row">
+        <input id="computeLatencySec" type="range" value="${state.params.computeLatencySec}" min="0" max="2" step="0.001" />
+        <span id="computeLatencySecValue" class="value-chip">${state.params.computeLatencySec.toFixed(4)}</span>
+      </div>
+    </div>
+  </section>
+  <section class="panel">
+    <h2>Optimization</h2>
+    <div class="control-field">
+      <label for="optimizeObjective">Objective</label>
+      <select id="optimizeObjective">
+        <option value="meanE2E">Minimize mean E2E</option>
+        <option value="worstE2E">Minimize worst-case E2E</option>
+      </select>
+    </div>
+    <button id="optimizeBtn" class="primary">Run optimization</button>
+  </section>
 `;
 
 root.appendChild(side);
 root.appendChild(canvas);
-
 const metrics = side.querySelector('#metrics') as HTMLDivElement | null;
 const renderer = new WebGPURenderer();
 void renderer.init(canvas);
 const ueCounter = side.querySelector('#ueCounter') as HTMLDivElement | null;
 const userCountSeedBase = 12345;
+const MOBILE_BREAKPOINT_PX = 1080;
+
+const clampValue = (value: number, min: number, max: number): number =>
+  Math.max(min, Math.min(max, value));
+
+function syncCanvasAndWorldLayout(): void {
+  const appRect = root.getBoundingClientRect();
+  const isMobile = window.innerWidth <= MOBILE_BREAKPOINT_PX || window.innerHeight <= 700;
+
+  const panelRect = side.getBoundingClientRect();
+  const nextWidth = Math.max(240, isMobile
+    ? Math.max(0, Math.floor(appRect.width - 16))
+    : Math.max(240, Math.floor(appRect.width - panelRect.width - 12))
+  );
+  const panelReserve = isMobile ? 0 : 12;
+  const targetMobileCanvas = isMobile
+    ? Math.max(220, Math.floor(appRect.height * 0.34))
+    : 0;
+  const nextHeight = isMobile
+    ? targetMobileCanvas
+    : Math.max(220, Math.floor(appRect.height - panelReserve));
+
+  const prevWidth = state.width;
+  const prevHeight = state.height;
+  const needRescale = prevWidth !== nextWidth || prevHeight !== nextHeight;
+
+  if (needRescale) {
+    const sx = prevWidth > 0 ? nextWidth / prevWidth : 1;
+    const sy = prevHeight > 0 ? nextHeight / prevHeight : 1;
+
+    for (const b of state.bs) {
+      b.pos.x = clampValue(b.pos.x * sx, 0, Math.max(0, nextWidth));
+      b.pos.y = clampValue(b.pos.y * sy, 0, Math.max(0, nextHeight));
+    }
+
+    for (const u of state.users) {
+      u.pos.x = clampValue(u.pos.x * sx, 0, Math.max(0, nextWidth));
+      u.pos.y = clampValue(u.pos.y * sy, 0, Math.max(0, nextHeight));
+    }
+
+    for (let i = 0; i < state.mobility.physicalTargets.length; i += 1) {
+      const p = state.mobility.physicalTargets[i];
+      p.x = clampValue(p.x * sx, 0, Math.max(0, nextWidth));
+      p.y = clampValue(p.y * sy, 0, Math.max(0, nextHeight));
+    }
+  }
+
+  state.width = nextWidth;
+  state.height = nextHeight;
+  canvas.width = nextWidth;
+  canvas.height = nextHeight;
+  canvas.style.width = `${nextWidth}px`;
+  canvas.style.height = `${nextHeight}px`;
+  renderer.resize(nextWidth, nextHeight);
+
+  if (needRescale) {
+    setAssignmentMode(state, state.params.assignmentMode ?? 'nearest');
+    queueOrRunRerun();
+  }
+}
 
 let draggingServer: number | null = null;
 let draggingServerPos: { x: number; y: number } | null = null;
@@ -856,6 +985,7 @@ for (let i = 0; i < state.communities.length; i += 1) {
   }
   setServerToBs(state, i, i % state.bs.length);
 }
+syncCanvasAndWorldLayout();
 queueOrRunRerun();
 if (metrics) {
   renderMetrics(metrics, result);
@@ -867,7 +997,5 @@ requestAnimationFrame((t) => {
 });
 
 window.addEventListener('resize', () => {
-  const rect = root.getBoundingClientRect();
-  canvas.width = rect.width - 250;
-  renderer.resize(rect.width - 250, rect.height);
+  syncCanvasAndWorldLayout();
 });

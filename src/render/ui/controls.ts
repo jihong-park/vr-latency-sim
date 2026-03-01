@@ -57,18 +57,25 @@ export function wireControls(
     const speedMax = Number(input.max);
     const speedStep = Number(input.step) || 1;
     const decimals = Number.isFinite(speedStep) ? decimalsFromStep(speedStep) : fixed;
+    const formatValue = (value: number): string => {
+      const shown = Number.isFinite(speedStep)
+        ? Number((Math.round(value / speedStep) * speedStep).toFixed(decimals))
+        : value;
+      return shown.toFixed(Math.max(0, decimals)).replace(/\.0+$/, '').replace(/(\.\d*[1-9])0+$/, '$1');
+    };
     const cb = () => {
       const v = Number(input.value);
       const clamped = Math.min(speedMax, Math.max(speedMin, v));
       if (Number.isFinite(clamped)) {
         input.value = String(Number(clamped.toFixed(decimals)));
-        const shown = Number.isFinite(speedStep) ? Number((Math.round(clamped / speedStep) * speedStep).toFixed(decimals)) : clamped;
-        valueEl.textContent = shown.toFixed(decimals).replace(/\.0+$/, '').replace(/(\.\d*[1-9])0+$/, '$1');
+        valueEl.textContent = formatValue(clamped);
         onStateChange({ ..._state, [type]: clamped }, { type, value: clamped });
       }
     };
     input.addEventListener('input', cb);
+    input.addEventListener('change', cb);
     cleanup.push(() => input.removeEventListener('input', cb));
+    cleanup.push(() => input.removeEventListener('change', cb));
   };
 
   wireRange(mobilitySpeedPhysical, mobilitySpeedPhysicalValue, 'mobilitySpeedPhysical');
